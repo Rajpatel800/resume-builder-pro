@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Builder | ResumePro</title>
+  <link rel="stylesheet" href="css/builder.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container">
+      <div class="logo">ResumePro</div>
+    </div>
+  </header>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="logo">ResumePro</span>
+        <a href="index.html" class="home-btn">Home</a>
+      </div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="#user-info" class="active">User Info</a></li>
+          <li><a href="#about">About Me</a></li>
+          <li><a href="#education">Education</a></li>
+          <li><a href="#skills">Skills</a></li>
+          <li><a href="#experience">Experience</a></li>
+          <li><a href="#templates">Templates</a></li>
+        </ul>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="theme-toggle">🌙</button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <section class="form-section" id="form-section">
+        <!-- Dynamic form content will be injected here by JS -->
+      </section>
+      <section class="preview-section" id="preview-section">
+        <div class="template-switcher">
+          <button class="template-btn" data-template="1">Modern</button>
+          <button class="template-btn" data-template="2">Professional</button>
+          <button class="template-btn" data-template="3">Creative</button>
+          <button class="template-btn" data-template="4">Minimalist</button>
+          <button class="template-btn" data-template="5">Corporate</button>
+        </div>
+        <div id="resume-preview" class="resume-preview">
+          <!-- Live resume preview will be rendered here -->
+        </div>
+        <button id="download-pdf" class="cta">Download as PDF</button>
+        <div id="my-resumes-section" style="margin-top:2.5rem;">
+          <h3 style="margin-bottom:1rem;">My Saved Resumes</h3>
+          <div id="my-resumes-list" class="my-resumes-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/builder.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</body>
+</html> 

@@ -1,0 +1,41 @@
+{
+  "name": "resumepro-builder",
+  "version": "1.0.0",
+  "description": "A modern, responsive resume builder web application with multiple templates and real-time preview",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -o",
+    "dev": "npx live-server --port=3000 --open=/",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "echo 'Deploy to Vercel: vercel --prod'"
+  },
+  "keywords": [
+    "resume",
+    "builder",
+    "cv",
+    "template",
+    "pdf",
+    "html",
+    "css",
+    "javascript",
+    "responsive",
+    "modern"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/resumepro-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/resumepro-builder/issues"
+  },
+  "homepage": "https://resumepro-builder.vercel.app",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
