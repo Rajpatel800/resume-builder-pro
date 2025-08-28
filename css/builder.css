@@ -164,6 +164,11 @@ body {
   position: relative;
   overflow: hidden;
 }
+
+/* Responsive scaling for small screens without changing layout */
+.resume-preview.scale-fit {
+  transform-origin: top center;
+}
 #download-pdf.cta {
   background: var(--accent);
   color: #fff;
@@ -204,6 +209,13 @@ body.dark .resume-preview {
   border-color: #334155;
 }
 
+/* Remove border/shadow while exporting to PDF */
+.pdf-mode.resume-preview {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
 @media (max-width: 1100px) {
   .main-content {
     flex-direction: column;
@@ -214,6 +226,108 @@ body.dark .resume-preview {
     max-width: 100%;
     margin-right: 0;
   }
+}
+
+/* PDF-specific styles for better formatting */
+@media print {
+  .resume-template {
+    width: 210mm !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    padding: 15mm !important;
+    background: white !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  .resume-template * {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  .resume-template .header {
+    margin-bottom: 20px !important;
+  }
+  
+  .resume-template .section {
+    margin-bottom: 15px !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .resume-template .section-title {
+    font-size: 14pt !important;
+    margin-bottom: 8px !important;
+    page-break-after: avoid !important;
+  }
+  
+  .resume-template .content {
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+  
+  .resume-template .name {
+    font-size: 18pt !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .resume-template .contact-info {
+    font-size: 10pt !important;
+    margin-bottom: 15px !important;
+  }
+}
+
+/* PDF generation styles */
+.pdf-element {
+  width: 210mm !important;
+  max-width: 210mm !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 15mm !important;
+  background: white !important;
+  font-size: 11pt !important;
+  line-height: 1.3 !important;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: 0 !important;
+}
+
+.pdf-element * {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+.pdf-element .header {
+  margin-bottom: 20px !important;
+}
+
+.pdf-element .section {
+  margin-bottom: 15px !important;
+  page-break-inside: avoid !important;
+}
+
+.pdf-element .section-title {
+  font-size: 14pt !important;
+  margin-bottom: 8px !important;
+  page-break-after: avoid !important;
+}
+
+.pdf-element .content {
+  font-size: 11pt !important;
+  line-height: 1.4 !important;
+}
+
+.pdf-element .name {
+  font-size: 18pt !important;
+  margin-bottom: 8px !important;
+}
+
+.pdf-element .contact-info {
+  font-size: 10pt !important;
+  margin-bottom: 15px !important;
 }
 
 /* Mobile optimizations */
@@ -1320,9 +1434,12 @@ body.dark .template-2 .sidebar {
   width: 595px !important; /* A4 width */
   height: 842px !important; /* A4 height */
   margin: 0 auto !important;
-  padding: 40px !important;
+  padding: 0 !important; /* remove extra inner padding for tighter fit */
   box-sizing: border-box !important;
   overflow: hidden !important;
+  border: none !important; /* remove outline/border */
+  box-shadow: none !important; /* remove shadow */
+  border-radius: 0 !important;
 }
 
 /* Mobile touch optimizations */
@@ -1376,6 +1493,13 @@ body.dark .template-2 .sidebar {
     padding: 0.8rem 1rem;
     font-size: 1rem;
     min-height: 48px;
+  }
+
+  /* Sticky download on mobile for convenience */
+  .preview-section #download-pdf.cta {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
   }
 }
 

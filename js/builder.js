@@ -62,6 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderForm(currentSection);
     renderPreview();
   if (templateBtns[0]) templateBtns[0].classList.add('active');
+  // Responsive: scale resume preview on small screens
+  setupResponsiveScale();
 });
 
 // Render form based on current section
@@ -436,6 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     preview.innerHTML = templateHTML;
+    // Re-apply responsive scaling after preview updates
+    applyScaleToPreview();
   }
 
 // Load saved photo data on page load
@@ -572,12 +576,10 @@ function removeProfilePhoto() {
 function downloadPDF() {
   const preview = document.getElementById('resume-preview');
   const downloadBtn = document.getElementById('download-pdf');
-  
   if (!preview) {
     alert('Resume preview not found.');
     return;
   }
-
   if (!window.html2pdf) {
     alert('PDF library not loaded. Please refresh the page and try again.');
     return;
@@ -588,82 +590,101 @@ function downloadPDF() {
   downloadBtn.textContent = 'Generating PDF...';
   downloadBtn.disabled = true;
 
-  // Create a clone of the preview for PDF generation
-  const pdfElement = preview.cloneNode(true);
-  pdfElement.style.position = 'absolute';
-  pdfElement.style.left = '-9999px';
-  pdfElement.style.top = '0';
-  pdfElement.style.width = '210mm'; // A4 width
-  pdfElement.style.backgroundColor = '#ffffff';
-  document.body.appendChild(pdfElement);
+  // Toggle export-friendly mode
+  const hadDark = document.body.classList.contains('dark');
+  if (hadDark) document.body.classList.remove('dark');
+  // Temporarily disable on-screen scale while exporting
+  const hadScale = preview.classList.contains('scale-fit');
+  if (hadScale) preview.classList.remove('scale-fit');
+  preview.style.transform = '';
+  preview.classList.add('pdf-mode');
 
-  // Configure PDF options for better alignment and mobile compatibility
+  // Wait for fonts/images
+  const waitForFonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  const waitForImages = Promise.all(
+    Array.from(preview.querySelectorAll('img')).map(img => {
+      if (img.complete) return Promise.resolve();
+      return new Promise(resolve => { img.onload = img.onerror = () => resolve(); });
+    })
+  );
+
+  Promise.all([waitForFonts, waitForImages]).then(() => {
+    setTimeout(() => {
+      generatePDF(preview, downloadBtn, originalText, hadDark, hadScale);
+    }, 30);
+  });
+}
+
+function generatePDF(pdfElement, downloadBtn, originalText, restoreDark, restoreScale) {
+  // Detect if it's a mobile device
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
   const pdfOptions = {
-    margin: [15, 15, 15, 15], // Increased margins for better page fit
+    margin: isMobile ? [0, 0, 0, 0] : [5, 5, 5, 5],
     filename: 'Resume.pdf',
     image: { 
       type: 'jpeg', 
-      quality: 0.98 
+      quality: isMobile ? 0.7 : 0.9
     },
     html2canvas: { 
-      scale: 2, // Higher scale for better quality
+      scale: isMobile ? 1 : 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      width: 794, // A4 width in pixels at 96 DPI
-      height: 1123, // A4 height in pixels at 96 DPI
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 794,
-      windowHeight: 1123
+      logging: false,
+      foreignObjectRendering: false,
+      removeContainer: true
     },
     jsPDF: { 
       unit: 'mm', 
       format: 'a4', 
       orientation: 'portrait',
-      compress: true
+      compress: true,
+      precision: 16
     }
   };
 
-  // Generate PDF
+  // Try to generate PDF
   window.html2pdf()
     .set(pdfOptions)
     .from(pdfElement)
     .save()
     .then(() => {
-      // Success
+      console.log('PDF generated successfully');
       downloadBtn.textContent = originalText;
       downloadBtn.disabled = false;
-      document.body.removeChild(pdfElement);
+      pdfElement.classList.remove('pdf-mode');
+      if (restoreDark) document.body.classList.add('dark');
+      if (restoreScale) { pdfElement.classList.add('scale-fit'); applyScaleToPreview(); }
     })
     .catch((error) => {
-      // Error handling
       console.error('PDF generation failed:', error);
       
-      // Try alternative method for mobile devices
-      if (error.message && error.message.includes('canvas')) {
-        tryAlternativePDFMethod(pdfElement, downloadBtn, originalText);
+      // Try simpler method for mobile
+      if (isMobile) {
+        tryMobilePDF(pdfElement, downloadBtn, originalText, restoreDark, restoreScale);
       } else {
-        alert('PDF generation failed. Please try again.');
-        downloadBtn.textContent = originalText;
-        downloadBtn.disabled = false;
-        document.body.removeChild(pdfElement);
+        trySimplePDF(pdfElement, downloadBtn, originalText, restoreDark, restoreScale);
       }
     });
 }
 
-// Alternative PDF method for mobile devices
-function tryAlternativePDFMethod(pdfElement, downloadBtn, originalText) {
-  const alternativeOptions = {
-    margin: [10, 10, 10, 10],
+function tryMobilePDF(pdfElement, downloadBtn, originalText, restoreDark, restoreScale) {
+  console.log('Trying mobile-specific PDF method');
+  
+  const mobileOptions = {
+    margin: [5, 5, 5, 5],
     filename: 'Resume.pdf',
-    image: { type: 'jpeg', quality: 0.8 },
+    image: { type: 'jpeg', quality: 0.5 },
     html2canvas: { 
-      scale: 1.5,
+      scale: 1,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      logging: false
+      logging: false,
+      removeContainer: true
     },
     jsPDF: { 
       unit: 'mm', 
@@ -673,19 +694,109 @@ function tryAlternativePDFMethod(pdfElement, downloadBtn, originalText) {
   };
 
   window.html2pdf()
-    .set(alternativeOptions)
+    .set(mobileOptions)
     .from(pdfElement)
     .save()
     .then(() => {
       downloadBtn.textContent = originalText;
       downloadBtn.disabled = false;
-      document.body.removeChild(pdfElement);
+      pdfElement.classList.remove('pdf-mode');
+      if (restoreDark) document.body.classList.add('dark');
+      if (restoreScale) { pdfElement.classList.add('scale-fit'); applyScaleToPreview(); }
     })
     .catch((error) => {
-      console.error('Alternative PDF method also failed:', error);
-      alert('PDF generation failed on this device. Please try on a desktop computer.');
+      console.error('Mobile PDF method failed:', error);
+      // Try print method as last resort
+      tryPrintMethod(pdfElement, downloadBtn, originalText, restoreDark, restoreScale);
+    });
+}
+
+function tryPrintMethod(pdfElement, downloadBtn, originalText, restoreDark, restoreScale) {
+  console.log('Trying print method as fallback');
+  
+  // Make the element visible for printing
+  pdfElement.style.position = 'fixed';
+  pdfElement.style.left = '0';
+  pdfElement.style.top = '0';
+  pdfElement.style.zIndex = '9999';
+  pdfElement.style.backgroundColor = 'white';
+  
+  // Try to print
+  try {
+    window.print();
+    downloadBtn.textContent = originalText;
+    downloadBtn.disabled = false;
+    pdfElement.classList.remove('pdf-mode');
+    if (restoreDark) document.body.classList.add('dark');
+    if (restoreScale) { pdfElement.classList.add('scale-fit'); applyScaleToPreview(); }
+  } catch (error) {
+    console.error('Print method failed:', error);
+    alert('PDF generation is not supported on this device. Please try on a desktop computer or use the print function in your browser.');
+    downloadBtn.textContent = originalText;
+    downloadBtn.disabled = false;
+    pdfElement.classList.remove('pdf-mode');
+    if (restoreDark) document.body.classList.add('dark');
+    if (restoreScale) { pdfElement.classList.add('scale-fit'); applyScaleToPreview(); }
+  }
+}
+
+function trySimplePDF(pdfElement, downloadBtn, originalText, restoreDark, restoreScale) {
+  console.log('Trying simple PDF method');
+  
+  const simpleOptions = {
+    margin: [10, 10, 10, 10],
+    filename: 'Resume.pdf',
+    image: { type: 'jpeg', quality: 0.8 },
+    html2canvas: { 
+      scale: 1.5,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff'
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait'
+    }
+  };
+
+  window.html2pdf()
+    .set(simpleOptions)
+    .from(pdfElement)
+    .save()
+    .then(() => {
       downloadBtn.textContent = originalText;
       downloadBtn.disabled = false;
-      document.body.removeChild(pdfElement);
+      pdfElement.classList.remove('pdf-mode');
+      if (restoreDark) document.body.classList.add('dark');
+      if (restoreScale) { pdfElement.classList.add('scale-fit'); applyScaleToPreview(); }
+    })
+    .catch((error) => {
+      console.error('Simple PDF method failed:', error);
+      alert('PDF generation failed. Please try again or use a different browser.');
+      downloadBtn.textContent = originalText;
+      downloadBtn.disabled = false;
+      pdfElement.classList.remove('pdf-mode');
+      if (restoreDark) document.body.classList.add('dark');
+      if (restoreScale) { pdfElement.classList.add('scale-fit'); applyScaleToPreview(); }
     });
 } 
+
+// Add responsive scaling logic
+function setupResponsiveScale() {
+  const apply = () => applyScaleToPreview();
+  window.addEventListener('resize', apply);
+  apply();
+}
+
+function applyScaleToPreview() {
+  const preview = document.getElementById('resume-preview');
+  if (!preview) return;
+  preview.classList.add('scale-fit');
+  const container = preview.parentElement;
+  if (!container) return;
+  const available = container.clientWidth - 24;
+  const baseWidth = 595; // A4 px width used for preview
+  const scale = Math.min(1, Math.max(0.6, available / baseWidth));
+  preview.style.transform = `scale(${scale})`;
+}
